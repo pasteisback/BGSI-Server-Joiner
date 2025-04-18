@@ -1,28 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BGSI Roblox Server Joiner</title>
+    <title>Roblox Server List</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
+        #server-list {
+            font-family: sans-serif;
         }
-        input, button {
-            margin: 10px;
+        .server-info {
+            border: 1px solid #ccc;
             padding: 10px;
-            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .join-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .join-button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <h1>BGSI Roblox Server Joiner</h1>
-    <p>Enter the number of players you'd like in the server:</p>
-    <input type="number" id="playerCount" placeholder="Number of Players">
-    <button onclick="findServer()">Find Server</button>
-    <p id="status"></p>
-    <script src="script.js"></script>
+    <h1>Available Servers</h1>
+    <div id="server-list">
+        <p>Loading server information...</p>
+    </div>
+    <p><a href="https://www.roblox.com/games/85896571713843/Bubble-Gum-Simulator-INFINITY">Play the Game on Roblox</a> (Opens game page)</p>
+
+    <script>
+        async function fetchServerList() {
+            const serverListDiv = document.getElementById('server-list');
+            try {
+                const response = await fetch('https://games.roblox.com/v1/games/85896571713843/servers/Public?limit=100&sortOrder=Asc');
+                const data = await response.json();
+
+                if (data.data && data.data.length > 0) {
+                    serverListDiv.innerHTML = ''; // Clear loading message
+                    data.data.forEach(server => {
+                        const serverDiv = document.createElement('div');
+                        serverDiv.classList.add('server-info');
+                        serverDiv.innerHTML = `
+                            <p><strong>ID:</strong> ${server.id}</p>
+                            <p><strong>Players:</strong> ${server.playing}</p>
+                            <p><strong>Max Players:</strong> ${server.maxPlayers}</p>
+                            <p><strong>Ping:</strong> (Not directly available via this API)</p>
+                        `;
+
+                        const joinButton = document.createElement('button');
+                        joinButton.classList.add('join-button');
+                        joinButton.textContent = 'Attempt to Join';
+                        joinButton.addEventListener('click', () => {
+                            // Construct a URL that the Roblox client *might* interpret to join a specific server.
+                            // This is not officially supported and may not always work.
+                            const joinUrl = `roblox://games/start?placeid=85896571713843&serverId=${server.id}`;
+                            window.location.href = joinUrl;
+                        });
+
+                        serverDiv.appendChild(joinButton);
+                        serverListDiv.appendChild(serverDiv);
+                    });
+                } else {
+                    serverListDiv.innerHTML = '<p>No public servers found.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching server list:', error);
+                serverListDiv.innerHTML = '<p>Failed to load server information.</p>';
+            }
+        }
+
+        fetchServerList();
+    </script>
 </body>
 </html>
